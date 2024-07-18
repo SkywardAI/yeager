@@ -11,13 +11,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM python:3.11.8-slim
+services:
+  yeager:
+    container_name: yeager
+    restart: always
+    build:
+      dockerfile: Dockerfile
+      context: .
+    entrypoint: ["python3", "-m", "tensorboard.main","--bind_all","--logdir=${METRICS_PATHS}"]
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/runs:/app/runs
+    expose:
+      - 6006
+    ports:
+      - 6006:6006
 
-WORKDIR /app
-
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-
-COPY requirements.txt .
-
-RUN pip --disable-pip-version-check --no-cache-dir install -r requirements.txt && rm -rf /tmp/pip-tmp

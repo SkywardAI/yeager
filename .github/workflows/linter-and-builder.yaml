@@ -1,0 +1,48 @@
+name: 'Builder Checker 🚀'
+on:
+  pull_request:
+    branches:
+      - 'main'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref && github.ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  check-build-images:
+    name: 'Docker Build Checker🐳'
+    needs: [code-quality, unittest]
+    strategy:
+      matrix:
+        config:
+          - { dockerfile: "Dockerfile", platforms: "linux/amd64,linux/arm64" }
+    # defaults:
+    #   run:
+    #     working-directory: backend/
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Check repository
+        uses: actions/checkout@v4
+        
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Get Commit Hash
+        id: commit
+        shell: bash
+        run: |
+          echo "SHORT_HASH=$(git rev-parse --short=7 HEAD)" >> $GITHUB_ENV
+
+      - name: Build Docker image
+        # if: startsWith(github.ref, 'refs/tags/') != true && success()
+        uses: docker/build-push-action@v6
+        with:
+          context: backend/
+          push: false
+          platforms: ${{ matrix.config.platforms }}
+          tags: "${{ secrets.YEAGER_REPO }}/${{ secrets.YEAGER_NAME }}:${{ env.SHORT_HASH }}"
+          file: ${{ matrix.config.dockerfile }}
