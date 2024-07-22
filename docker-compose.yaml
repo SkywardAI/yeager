@@ -18,11 +18,11 @@ services:
     build:
       dockerfile: Dockerfile
       context: .
-    entrypoint: ["python3", "-m", "tensorboard.main","--bind_all","--logdir=${METRICS_PATHS}"]
+    entrypoint: ["python3", "-m", "tensorboard.main","--port=80","--bind_all","--logdir=${METRICS_PATHS}"]
     volumes:
       - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/runs:/app/runs
     expose:
-      - 6006
+      - 80
     ports:
-      - 6006:6006
+      - 6006:80
 
